@@ -128,7 +128,8 @@
             <button id="sendButton" class="btn btn-success mt-5 p-3 px-5" onclick="sendToAPI()"
               aria-describedby="sendHelp"><strong>Stylize me!</strong></button>
           </div>
-          <div id="sendHelp" class="form-text text-center">Outfit Oracle and OpenAI will <em>immediately</em> delete your photos after we
+          <div id="sendHelp" class="form-text text-center">Outfit Oracle and OpenAI will <em>immediately</em> delete
+            your photos after we
             stylize you.</div>
 
 
@@ -247,15 +248,15 @@
   }
 
   function processForm() {
+    // Retrieve values from the form elements
     var eventDescription = document.getElementById('eventDescription').value;
-    if (eventDescription == "") {
-      eventDescription = "generic, everday"
-    }
     var styleDescription = document.getElementById('styleDescription').value;
-    if (styleDescription == "") {
-      styleDescription = "n/a"
-    }
 
+    // Set default values if the fields are empty
+    eventDescription = eventDescription || "generic, everyday";
+    styleDescription = styleDescription || "n/a";
+
+    // Assuming addToMessageContent is a function that adds the given content to a message
     addToMessageContent({
       type: "text",
       text: `The occasion the individual is dressing for is: ${eventDescription}`
@@ -264,6 +265,7 @@
       type: "text",
       text: `The individual mentions their desired style is: ${styleDescription}`
     });
+
   }
 
   function sendToAPI() {
