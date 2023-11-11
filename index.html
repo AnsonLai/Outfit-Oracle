@@ -320,7 +320,6 @@
     ];
 
     var text = data["response"]["choices"][0]['message']['content'];
-    console.log(data["messages"])
     var html = converter.makeHtml(text);
     if (unhelpfulResponses.includes(text)) {
       throw new Error('GPT cannot assist.');
