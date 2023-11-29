@@ -43,6 +43,21 @@
     crossorigin="anonymous"></script>
 </head>
 
+<style>
+  pre {
+    white-space: pre-wrap;
+    /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;
+    /* Mozilla, since 1999 */
+    white-space: -pre-wrap;
+    /* Opera 4-6 */
+    white-space: -o-pre-wrap;
+    /* Opera 7 */
+    word-wrap: break-word;
+    /* Internet Explorer 5.5+ */
+  }
+</style>
+
 <body class="d-flex flex-column h-100" onload="setup()" style="background-color: rgb(255, 255, 255);">
 
   <nav class="navbar navbar-light" style="background-color: rgb(255, 255, 255);">
@@ -299,7 +314,10 @@
       .then(data => handleAPIResponse(data)) // Pass the data to the new function
       .catch(error => {
         console.error('Error:', error);
-        alert('We have tight content guidelines.  Please ensure there are no inappropriate photos, then refresh the page and try again.')
+        alert('We have tight content guidelines.  Please remove inappropriate photos, then try again.');
+        document.getElementById('loader').classList.add("d-none");
+        document.getElementById('sendButton').disabled = false;
+        document.getElementById('sendButton').innerHTML = "<strong>Try Again</strong>";
       });
   }
 
@@ -380,21 +398,83 @@
   }
 
   function displayImage(base64Image) {
+    // Create a div element as a container
+    var divContainer = document.createElement('div');
+    divContainer.style.position = 'relative';
+    divContainer.style.display = 'inline-block'; // Allows the X button to be positioned correctly
+
     // Create an image element
     var imgElement = document.createElement('img');
     imgElement.src = base64Image;
-    imgElement.style.maxWidth = '150px'; // Set a max width to fit on the screen
+    imgElement.style.maxWidth = '150px';
     imgElement.style.maxHeight = '150px';
     imgElement.style.marginTop = '5px';
     imgElement.style.marginRight = '5px';
-    imgElement.style.marginLeft = '5px'; // Add some margin between the drop box and the image
+    imgElement.style.marginLeft = '5px';
 
-    // Handle transition after files are uploaded
-    // Append the image to the container
-    document.getElementById('image-container').appendChild(imgElement);
-    // Format image loader
+    // Create an "X" button
+    var closeButton = document.createElement('button');
+    closeButton.innerHTML = 'X';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '0';
+    closeButton.style.right = '0';
+    closeButton.style.background = 'red';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '3px'; // Rounded corners
+    closeButton.style.width = '15px'; // Smaller width
+    closeButton.style.height = '15px'; // Smaller height
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.display = 'flex'; // Use flexbox for centering
+    closeButton.style.justifyContent = 'center'; // Center horizontally
+    closeButton.style.alignItems = 'center'; // Center vertically
+    closeButton.style.fontSize = '0.8rem';
+
+    // Attach event listener to the "X" button
+    closeButton.addEventListener('click', function () {
+      // Retrieve the base64 string from the image element
+      var base64String = imgElement.src;
+
+      // Function to extract the actual base64 encoded part of the string
+      function extractBase64Data(str) {
+        var base64StartIndex = str.indexOf('base64,') + 7;
+        return str.substring(base64StartIndex);
+      }
+
+      // Extract the base64 data from the image element src
+      var strippedBase64String = extractBase64Data(base64String);
+
+      // Iterate through each message
+      messages.forEach(message => {
+        if (message.content && Array.isArray(message.content)) {
+          // Filter the content array
+          message.content = message.content.filter(contentItem => {
+            if (contentItem.type !== 'image_url' || !contentItem.image_url || !contentItem.image_url.url) {
+              return true; // Keep the content item if it's not of type 'image_url' or if url is undefined
+            }
+
+            // Extract the base64 data from the content item's URL
+            var contentBase64String = extractBase64Data(contentItem.image_url.url);
+
+            // Return false (remove) if the base64 strings match
+            return contentBase64String !== strippedBase64String;
+          });
+        }
+      });
+
+      // Remove the image container from the DOM
+      divContainer.remove();
+    });
+
+    // Append the image and the "X" button to the div
+    divContainer.appendChild(imgElement);
+    divContainer.appendChild(closeButton);
+
+    // Append the div to the image container
+    document.getElementById('image-container').appendChild(divContainer);
+
+    // Additional UI adjustment
     document.getElementById('image-container').style.marginTop = '5rem';
-    // Reveal form and scroll to it
     document.getElementById('photoCollector').classList.remove("offset-md-3");
     document.getElementById('formCollection').classList.remove("d-none");
     document.getElementById('formCollection').scrollIntoView({ behavior: 'smooth' });
