@@ -253,12 +253,15 @@
   ];
 
   var MAX_PHOTOS = 5;
-  function addToMessageContent(dict) {
+  function addToMessageContent(dict, contentType) {
+    var foundIndex = messages[0]['content'].findIndex(item => item.contentType === contentType);
 
-    if (messages[0]['content'].length < MAX_PHOTOS) {
-      messages[0]['content'].unshift(dict);
+    if (foundIndex !== -1) {
+      // Update existing entry
+      messages[0]['content'][foundIndex] = dict;
     } else {
-      // alert(`You cannot add more than ${MAX_PHOTOS} images.`);
+      // Add new entry if not found
+      messages[0]['content'].push(dict);
     }
   }
 
@@ -274,13 +277,15 @@
     // Assuming addToMessageContent is a function that adds the given content to a message
     addToMessageContent({
       type: "text",
+      contentType: "eventDescription",
       text: `The occasion the individual is dressing for is: ${eventDescription}`
-    });
+    }, "eventDescription");
+
     addToMessageContent({
       type: "text",
+      contentType: "styleDescription",
       text: `The individual mentions their desired style is: ${styleDescription}`
-    });
-
+    }, "styleDescription");
   }
 
   function sendToAPI() {
@@ -481,7 +486,11 @@
   }
 
   function processImage(file) {
-    if (messages[0]['content'].length >= MAX_PHOTOS) {
+    // Count only 'image_url' type elements in the 'content' array
+    var imageCount = messages[0]['content'].filter(item => item.type === 'image_url').length;
+
+    // Check if the number of image_url elements exceeds MAX_PHOTOS
+    if (imageCount >= MAX_PHOTOS) {
       alert(`You cannot add more than ${MAX_PHOTOS} images.`);
       return; // Stop processing the new image
     }
@@ -490,7 +499,7 @@
       let img = new Image();
       img.onload = function () {
         // Check again in case images were added since the process started
-        if (messages[0]['content'].length >= MAX_PHOTOS) {
+        if (imageCount >= MAX_PHOTOS) {
           return; // Stop the image processing if the limit is reached
         }
         let squareSize = Math.max(img.width, img.height);
